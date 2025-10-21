@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CE2407A — Tutorial Set #2 (Q1–Q3) — Single-Page Wizard</title>
+<title>CE2407A — Tutorials 1 & 2 (Q1–Q3, Q6–Q7) — Single-Page Wizard</title>
 <style>
   :root{
     --bg:#0b132b; --card:#1c2541; --accent:#5bc0be;
@@ -53,27 +53,30 @@
   .wizard-nav{display:flex;gap:8px;justify-content:space-between;align-items:center;position:sticky;bottom:0;padding:10px 0;z-index:15}
   .hidden{display:none}
   .kbd{display:inline-block;background:var(--kbd);border:1px solid rgba(255,255,255,.12);border-bottom-color:rgba(0,0,0,.6);padding:2px 6px;border-radius:6px;font-family:ui-monospace,Consolas,Menlo,monospace}
+  .group-label{font-size:12px;color:#b9c7ef;margin-left:6px}
 </style>
 </head>
 <body>
 <header>
   <div class="container" style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between">
     <div>
-      <h1>CE2407A — Tutorial Set #2 (Q1–Q3)</h1>
-      <p class="lead"> One question at a time with plots & answer-check feedback.</p>
+      <h1>CE2407A — Tutorials 1 &amp; 2</h1>
+      <p class="lead"><strong>Q1–Q3</strong> (Tutorial 2) &amp; <strong>Q6–Q7</strong> (Tutorial 1) with plots.</p>
     </div>
-    <div class="score">Score: <span id="score">0</span> / 3</div>
+    <div class="score">Score: <span id="score">0</span> / 5</div>
   </div>
   <div class="container steps">
-    <button class="step active" data-step="1" onclick="gotoStep(1)">Q1</button>
-    <button class="step" data-step="2" onclick="gotoStep(2)">Q2</button>
-    <button class="step" data-step="3" onclick="gotoStep(3)">Q3</button>
+    <button class="step active" data-step="1" onclick="gotoStep(1)">Q1 <span class="group-label">T2</span></button>
+    <button class="step" data-step="2" onclick="gotoStep(2)">Q2 <span class="group-label">T2</span></button>
+    <button class="step" data-step="3" onclick="gotoStep(3)">Q3 <span class="group-label">T2</span></button>
+    <button class="step" data-step="6" onclick="gotoStep(6)">Q6 <span class="group-label">T1</span></button>
+    <button class="step" data-step="7" onclick="gotoStep(7)">Q7 <span class="group-label">T1</span></button>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- Q1 -->
+  <!-- Q1 (Tutorial 2) -->
   <section id="q1" class="card">
     <div class="pill">Q1 — Poisson‑Binomial (PMF &amp; CDF)</div>
     <p>Three independent bids: <strong>A</strong>, <strong>B</strong>, <strong>C</strong> with win probabilities P(A)=0.5, P(B)=0.8, P(C)=0.2. Let X be the total wins.</p>
@@ -109,7 +112,7 @@
     <div id="q1_fb" class="small"></div>
   </section>
 
-  <!-- Q2 -->
+  <!-- Q2 (Tutorial 2) -->
   <section id="q2" class="card hidden">
     <div class="pill">Q2 — Continuous RV on [10, 20]</div>
     <p>PDF: <code>f<sub>R</sub>(r) = c (r − 10) (20 − r)</code> for 10 ≤ r ≤ 20; 0 elsewhere. Derive the CDF and key statistics.</p>
@@ -124,8 +127,6 @@
       <div><label>Your COV</label><input id="q2_cov" type="number" step="0.0001"></div>
       <div><label>Your skewness</label><input id="q2_skew" type="number" step="0.0001"></div>
     </div>
-
-    <!-- Removed the earlier top row with Check + "Show CDF & stats" for consistency -->
 
     <div class="svg-wrap"><h3>PDF f<sub>R</sub>(r)</h3><svg id="q2_pdf" viewBox="0 0 640 300" role="img" aria-label="PDF curve"></svg></div>
     <div class="svg-wrap"><h3>CDF F<sub>R</sub>(r)</h3><svg id="q2_cdf" viewBox="0 0 640 300" role="img" aria-label="CDF curve"></svg></div>
@@ -145,7 +146,7 @@
     <div id="q2_fb" class="small"></div>
   </section>
 
-  <!-- Q3 -->
+  <!-- Q3 (Tutorial 2) -->
   <section id="q3" class="card hidden">
     <div class="pill">Q3 — Normal Congestion &amp; Growth</div>
     <p>Present peak-hour volume: <strong>N(200, 60²)</strong>. Capacity <em>C</em> planes/hr. Mean increases linearly at 10% of current per year; COV remains constant.</p>
@@ -171,22 +172,109 @@
         <button onclick="q3_check()">Check answers</button>
         <button class="ghost" onclick="q3_solution()">Show solution</button>
       </div>
+      <button class="ghost" onclick="gotoStep(6)">Next →</button>
     </div>
     <div id="q3_fb" class="small"></div>
   </section>
 
-  <p class="footer">Source problems from the Tutorial 2 PDF.</p>
+<!-- Q6 (Tutorial 1) -->
+  <section id="q6" class="card hidden">
+    <div class="pill">Q6 — Liquefaction risk under earthquake intensity mix</div>
+    <p>Intensities L/M/H occur with relative frequencies (per year) of <em>w<sub>L</sub>=1</em>, <em>w<sub>M</sub>=0.1</em>, <em>w<sub>H</sub>=0.01</em>. Liquefaction probabilities by intensity are <em>p(Liq|L)=0.05</em>, <em>p(Liq|M)=0.20</em>, <em>p(Liq|H)=0.90</em>. Treat the next earthquake’s intensity as drawn from these weights and assume independence between events.</p>
+    <div class="row">
+      <div><label>Weight w<sub>L</sub> (per year)</label><input id="q6_wL" type="number" step="0.01" value="1"></div>
+      <div><label>Weight w<sub>M</sub> (per year)</label><input id="q6_wM" type="number" step="0.01" value="0.1"></div>
+      <div><label>Weight w<sub>H</sub> (per year)</label><input id="q6_wH" type="number" step="0.01" value="0.01"></div>
+    </div>
+    <div class="row">
+      <div><label>p(Liq | L)</label><input id="q6_pL" type="number" step="0.001" value="0.05"></div>
+      <div><label>p(Liq | M)</label><input id="q6_pM" type="number" step="0.001" value="0.20"></div>
+      <div><label>p(Liq | H)</label><input id="q6_pH" type="number" step="0.001" value="0.90"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="q6_compute()">Compute &amp; Plot</button>
+      <button class="secondary" onclick="q6_reset()">Reset</button>
+    </div>
+
+    <div class="svg-wrap"><h3>Intensity probabilities P(L), P(M), P(H)</h3><svg id="q6_probs" viewBox="0 0 640 300" role="img" aria-label="Intensity probabilities"></svg></div>
+    <div class="svg-wrap"><h3>Contributions to P(liquefaction): P(L)p(Liq|L), etc.</h3><svg id="q6_contrib" viewBox="0 0 640 300" role="img" aria-label="Liquefaction contributions"></svg></div>
+
+    <div class="hr"></div>
+    <div class="row">
+      <div><label>(a) P(L)</label><input id="q6_a" type="number" step="0.0001"></div>
+      <div><label>(b) P(liquefaction in next quake)</label><input id="q6_b" type="number" step="0.0001"></div>
+      <div><label>(c) P(survive next 3 quakes)</label><input id="q6_c" type="number" step="0.0001"></div>
+      <div><label>(d) P(L | liquefaction)</label><input id="q6_d" type="number" step="0.0001"></div>
+    </div>
+
+    <div class="row wizard-nav">
+      <button class="ghost" onclick="gotoStep(3)">← Back</button>
+      <div style="display:flex; gap:8px">
+        <button onclick="q6_check()">Check answers</button>
+        <button class="ghost" onclick="q6_solution()">Show solution</button>
+      </div>
+      <button class="ghost" onclick="gotoStep(7)">Next →</button>
+    </div>
+    <div id="q6_fb" class="small"></div>
+  </section>
+
+  <!-- Q7 (Tutorial 1) -->
+  <section id="q7" class="card hidden">
+    <div class="pill">Q7 — Two-device detection &amp; accurate location</div>
+    <p>Detectability of device A: <em>p<sub>A</sub>=0.8</em>; device B: <em>p<sub>B</sub>=0.9</em>. If detected by A alone, accurate location with prob. <em>0.7</em>; by B alone, <em>0.4</em>; by both, accurate with certainty.</p>
+    <div class="row">
+      <div><label>p<sub>A</sub> (detect by A)</label><input id="q7_pA" type="number" step="0.01" value="0.8"></div>
+      <div><label>p<sub>B</sub> (detect by B)</label><input id="q7_pB" type="number" step="0.01" value="0.9"></div>
+      <div><label>Accuracy if only A</label><input id="q7_accA" type="number" step="0.01" value="0.7"></div>
+      <div><label>Accuracy if only B</label><input id="q7_accB" type="number" step="0.01" value="0.4"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="q7_compute()">Compute &amp; Plot</button>
+      <button class="secondary" onclick="q7_reset()">Reset</button>
+    </div>
+
+    <div class="svg-wrap"><h3>Detection outcomes</h3><svg id="q7_detect" viewBox="0 0 640 300" role="img" aria-label="Detection breakdown"></svg></div>
+    <div class="svg-wrap"><h3>Contributions to accurate location</h3><svg id="q7_accurate" viewBox="0 0 640 300" role="img" aria-label="Accurate location contributions"></svg></div>
+
+    <div class="hr"></div>
+    <div class="row">
+      <div><label>(a) P(detected by ≥1 device)</label><input id="q7_a" type="number" step="0.0001"></div>
+      <div><label>(b) P(detected by only one device)</label><input id="q7_b" type="number" step="0.0001"></div>
+      <div><label>(c) P(accurately located)</label><input id="q7_c" type="number" step="0.0001"></div>
+    </div>
+
+    <div class="row wizard-nav">
+      <button class="ghost" onclick="gotoStep(6)">← Back</button>
+      <div style="display:flex; gap:8px">
+        <button onclick="q7_check()">Check answers</button>
+        <button class="ghost" onclick="q7_solution()">Show solution</button>
+      </div>
+    </div>
+    <div id="q7_fb" class="small"></div>
+  </section>
+
+  <p class="footer">Sources: Tutorial Set #2 (Q1–Q3) and Tutorial Set #1 (Q6–Q7).</p>
 </div>
 
 <script>
 /* ---------- Wizard / Score ---------- */
 let CURRENT_STEP = 1;
 let SCORE = 0;
-function computeScore(){SCORE = (sessionStorage.getItem('done_q1')?1:0) + (sessionStorage.getItem('done_q2')?1:0) + (sessionStorage.getItem('done_q3')?1:0);
-  document.getElementById('score').textContent=SCORE;}
+function computeScore(){
+  SCORE = (sessionStorage.getItem('done_q1')?1:0)
+        + (sessionStorage.getItem('done_q2')?1:0)
+        + (sessionStorage.getItem('done_q3')?1:0)
+        + (sessionStorage.getItem('done_q6')?1:0)
+        + (sessionStorage.getItem('done_q7')?1:0);
+  document.getElementById('score').textContent=SCORE;
+}
 function gotoStep(n){
   CURRENT_STEP = n;
-  ['q1','q2','q3'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden', (i+1)!==n));
+  ['q1','q2','q3','q6','q7'].forEach((id,i)=>{
+    const map=[1,2,3,6,7];
+    const step=map[i];
+    document.getElementById(id).classList.toggle('hidden', step!==n);
+  });
   document.querySelectorAll('.step').forEach(btn=>btn.classList.toggle('active', +btn.dataset.step===n));
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -199,11 +287,12 @@ const fmt=p=>Number(p).toFixed(4);
 /* ---------- Drawing helpers ---------- */
 function drawBars(id, xs, ys){
   const svg=document.getElementById(id); svg.innerHTML='';
-  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-50,maxY=Math.max(...ys)*1.15;
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-50,maxY=Math.max(...ys,1e-9)*1.15;
   const spacing=plotW/xs.length, bw=spacing*0.6;
   svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
                     <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />`;
-  xs.forEach((x,i)=>{const xPos=x0+i*spacing+(spacing-bw)/2; const barH=(ys[i]/maxY)*plotH;
+  xs.forEach((x,i)=>{
+    const xPos=x0+i*spacing+(spacing-bw)/2; const barH=(ys[i]/maxY)*plotH;
     svg.innerHTML += `<rect x="${xPos}" y="${y0-barH}" width="${bw}" height="${barH}" fill="#5bc0be" opacity="0.9" />`;
     svg.innerHTML += `<text x="${x0+i*spacing+spacing/2}" y="${y0+16}" text-anchor="middle" fill="#c0c9e8" font-size="12">${x}</text>`;
   });
@@ -287,13 +376,12 @@ function q1_compute(){
   const ps=[+q1_pA.value,+q1_pB.value,+q1_pC.value];
   const pmf=q1_pmf(ps); const cdf=q1_cum(pmf);
   drawBars('q1_pmf',[0,1,2,3],pmf); drawStep('q1_cdf',[0,1,2,3],cdf);
-  // placeholders removed to avoid revealing solutions
   q1_fb.textContent='Computed.';
 }
 function q1_reset(){
   ['q1_pA','q1_pB','q1_pC','q1_px0','q1_px1','q1_px2','q1_px3','q1_le2','q1_between'].forEach(id=>document.getElementById(id).value='');
   q1_pA.value=0.5; q1_pB.value=0.8; q1_pC.value=0.2;
-  q1_pmf_el=document.getElementById('q1_pmf'); q1_pmf_el.innerHTML=''; document.getElementById('q1_cdf').innerHTML=''; q1_fb.textContent='';
+  document.getElementById('q1_pmf').innerHTML=''; document.getElementById('q1_cdf').innerHTML=''; q1_fb.textContent='';
 }
 function q1_check(){
   const ps=[+q1_pA.value,+q1_pB.value,+q1_pC.value]; const pmf=q1_pmf(ps); const cdf=q1_cum(pmf);
@@ -389,11 +477,91 @@ function q3_solution(){
   document.getElementById('q3_fb').innerHTML = `Today: z=(C−200)/60; with C=${C}, z=${zNow.toFixed(4)} ⇒ P≈${fmt(pNow)}. In 10 yrs: μ=400, σ=120 ⇒ P≈${fmt(p10)}. To keep the same service: C=400+120·z ≈ ${reqC.toFixed(1)}.`;
 }
 
+/* ---------- Q6 logic ---------- */
+function q6_params(){
+  const wL=+q6_wL.value, wM=+q6_wM.value, wH=+q6_wH.value;
+  const pL=+q6_pL.value, pM=+q6_pM.value, pH=+q6_pH.value;
+  const S=wL+wM+wH;
+  const PL = S>0? wL/S : 0, PM=S>0? wM/S : 0, PH=S>0? wH/S : 0;
+  const Pliq = PL*pL + PM*pM + PH*pH;
+  const Psurvive3 = Math.pow(1-Pliq,3);
+  const PL_given_liq = Pliq>0? (PL*pL)/Pliq : 0;
+  return {PL,PM,PH,Pliq,Psurvive3,PL_given_liq};
+}
+function q6_compute(){
+  const {PL,PM,PH,Pliq,Psurvive3,PL_given_liq} = q6_params();
+  drawBars('q6_probs', ['L','M','H'], [PL,PM,PH]);
+  drawBars('q6_contrib', ['L','M','H'], [PL*(+q6_pL.value), PM*(+q6_pM.value), PH*(+q6_pH.value)]);
+  q6_fb.textContent = `Computed: P(L)=${fmt(PL)}, P(M)=${fmt(PM)}, P(H)=${fmt(PH)}; P(liq)=${fmt(Pliq)}; P(survive 3)=${fmt(Psurvive3)}; P(L|liq)=${fmt(PL_given_liq)}.`;
+}
+function q6_reset(){
+  q6_wL.value=1; q6_wM.value=0.1; q6_wH.value=0.01;
+  q6_pL.value=0.05; q6_pM.value=0.20; q6_pH.value=0.90;
+  ['q6_a','q6_b','q6_c','q6_d'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('q6_probs').innerHTML='';
+  document.getElementById('q6_contrib').innerHTML='';
+  q6_fb.textContent='';
+}
+function q6_check(){
+  const {PL,Pliq,Psurvive3,PL_given_liq} = q6_params();
+  const ans=[q6_a.value,q6_b.value,q6_c.value,q6_d.value];
+  const tgt=[PL,Pliq,Psurvive3,PL_given_liq];
+  const ok=ans.every((x,i)=>approx(x,tgt[i],1e-3));
+  q6_fb.innerHTML = ok? '<span class="ok">✅ Correct.</span>' :
+    '<span class="bad">❌ Not quite. Hint: normalize the weights to get P(L), then use total probability and Bayes.</span>';
+  if(ok && !sessionStorage.getItem('done_q6')){sessionStorage.setItem('done_q6','1'); computeScore();}
+}
+function q6_solution(){
+  const {PL,PM,PH,Pliq,Psurvive3,PL_given_liq} = q6_params();
+  q6_fb.innerHTML = `P(L)=w_L/(w_L+w_M+w_H)=${fmt(PL)}. Using total probability, P(liq)=P(L)p(Liq|L)+P(M)p(Liq|M)+P(H)p(Liq|H)=${fmt(Pliq)}. Independence ⇒ P(survive 3)=(1−P(liq))³=${fmt(Psurvive3)}. Bayes: P(L|liq)=[P(L)p(Liq|L)]/P(liq)=${fmt(PL_given_liq)}.`;
+}
+
+/* ---------- Q7 logic ---------- */
+function q7_params(){
+  const pA=+q7_pA.value, pB=+q7_pB.value, aA=+q7_accA.value, aB=+q7_accB.value;
+  const Pnone=(1-pA)*(1-pB);
+  const PonlyA=pA*(1-pB);
+  const PonlyB=pB*(1-pA);
+  const Pboth=pA*pB;
+  const Pdet=1-Pnone;
+  const PonlyOne=PonlyA+PonlyB;
+  const Pacc=Pboth*1 + PonlyA*aA + PonlyB*aB;
+  return {Pnone,PonlyA,PonlyB,Pboth,Pdet,PonlyOne,Pacc,aA,aB};
+}
+function q7_compute(){
+  const {Pnone,PonlyA,PonlyB,Pboth,Pacc,aA,aB} = q7_params();
+  drawBars('q7_detect', ['None','Only A','Only B','Both'], [Pnone,PonlyA,PonlyB,Pboth]);
+  drawBars('q7_accurate', ['Only A','Only B','Both'], [PonlyA*aA,PonlyB*aB,Pboth*1]);
+  q7_fb.textContent = `Computed: P(detected)=${fmt(1-Pnone)}; P(only one)=${fmt(PonlyA+PonlyB)}; P(accurate)=${fmt(Pacc)}.`;
+}
+function q7_reset(){
+  q7_pA.value=0.8; q7_pB.value=0.9; q7_accA.value=0.7; q7_accB.value=0.4;
+  ['q7_a','q7_b','q7_c'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('q7_detect').innerHTML='';
+  document.getElementById('q7_accurate').innerHTML='';
+  q7_fb.textContent='';
+}
+function q7_check(){
+  const {Pnone,PonlyA,PonlyB,Pboth,Pdet,PonlyOne,Pacc}=q7_params();
+  const ans=[q7_a.value,q7_b.value,q7_c.value];
+  const tgt=[Pdet,PonlyOne,Pacc];
+  const ok=ans.every((x,i)=>approx(x,tgt[i],1e-3));
+  q7_fb.innerHTML = ok? '<span class="ok">✅ Correct.</span>' :
+    '<span class="bad">❌ Check your set algebra: (a) 1−(1−pA)(1−pB); (b) pA(1−pB)+pB(1−pA); (c) add contributions with accuracies.</span>';
+  if(ok && !sessionStorage.getItem('done_q7')){sessionStorage.setItem('done_q7','1'); computeScore();}
+}
+function q7_solution(){
+  const {Pnone,PonlyA,PonlyB,Pboth,Pdet,PonlyOne,Pacc,aA,aB}=q7_params();
+  q7_fb.innerHTML = `P(detected)=1−(1−p_A)(1−p_B)=${fmt(Pdet)}. Only one: p_A(1−p_B)+p_B(1−p_A)=${fmt(PonlyOne)}. Accurate: P(both)·1 + P(onlyA)·${fmt(aA)} + P(onlyB)·${fmt(aB)} = ${fmt(Pacc)}.`;
+}
+
 /* ---------- Boot ---------- */
 gotoStep(1);
 q1_compute();
 q2_draw(); q2_evalCDF();
 q3_compute();
+q6_compute();
+q7_compute();
 </script>
 </body>
 </html>
