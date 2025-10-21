@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CE2407A — Tutorial Set #2 (Q1–Q3) — Single-Page Wizard</title>
+<style>
+  :root{
+    --bg:#0b132b; --card:#1c2541; --accent:#5bc0be;
+    --accent2:#c5d86d; --text:#f0f3f7; --muted:#a8b3c7;
+    --danger:#ff6b6b; --ok:#00c896; --warn:#ffd166;
+    --kbd:#2b2f42; --code:#151a2b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif}
+  a{color:var(--accent)}
+  header{padding:18px 16px;background:linear-gradient(180deg,#0b132b 0%,#111a36 100%);
+    border-bottom:1px solid rgba(255,255,255,.06); position:sticky; top:0; z-index:20}
+  .container{max-width:1100px;margin:0 auto;padding:18px}
+  h1{font-size:clamp(22px,3vw,28px);margin:0 0 2px 0}
+  p.lead{color:var(--muted);margin:0}
+  .score{font-weight:800}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(91,192,190,.15);
+    color:var(--accent);font-weight:600;font-size:12px;letter-spacing:.25px}
+  label{display:block;font-weight:600;margin:10px 0 4px}
+  input[type="number"], input[type="text"]{
+    width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
+    background:#0e162f;color:var(--text);outline:none}
+  input[type="number"]:focus, input[type="text"]:focus{border-color:var(--accent)}
+  button{appearance:none;border:0;border-radius:10px;padding:10px 14px;background:var(--accent);
+    color:#04131c;font-weight:700;cursor:pointer;transition:.15s transform ease, .15s filter ease;
+    box-shadow:0 5px 16px rgba(0,0,0,.25)}
+  button.secondary{background:#233058;color:#dee6ff}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#e6edff}
+  button.warn{background:var(--warn);color:#3a2c00}
+  button:hover{filter:brightness(1.05)} button:active{transform:translateY(1px)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1 1 260px}
+  .svg-wrap{background:#0f1833;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px;margin-top:8px}
+  svg{width:100%;height:300px;background:#0f1833;border-radius:8px}
+  .small{font-size:12px;color:var(--muted)}
+  .ok{color:var(--ok)} .bad{color:var(--danger)}
+  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);margin:12px 0}
+  .footer{color:var(--muted);font-size:12px;margin-top:20px}
+  /* Wizard bits */
+  .steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .step{border:1px solid rgba(255,255,255,.15);background:#12204b;color:#e6edff;padding:8px 12px;border-radius:10px;cursor:pointer}
+  .step.active{background:var(--accent);color:#04131c;border-color:transparent;font-weight:800}
+  .wizard-nav{display:flex;gap:8px;justify-content:space-between;align-items:center;position:sticky;bottom:0;padding:10px 0;z-index:15}
+  .hidden{display:none}
+  .kbd{display:inline-block;background:var(--kbd);border:1px solid rgba(255,255,255,.12);border-bottom-color:rgba(0,0,0,.6);padding:2px 6px;border-radius:6px;font-family:ui-monospace,Consolas,Menlo,monospace}
+</style>
+</head>
+<body>
+<header>
+  <div class="container" style="display:flex;align-items:flex-start;gap:12px;justify-content:space-between">
+    <div>
+      <h1>CE2407A — Tutorial Set #2 (Q1–Q3)</h1>
+      <p class="lead"> One question at a time with plots & answer-check feedback.</p>
+    </div>
+    <div class="score">Score: <span id="score">0</span> / 3</div>
+  </div>
+  <div class="container steps">
+    <button class="step active" data-step="1" onclick="gotoStep(1)">Q1</button>
+    <button class="step" data-step="2" onclick="gotoStep(2)">Q2</button>
+    <button class="step" data-step="3" onclick="gotoStep(3)">Q3</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Q1 -->
+  <section id="q1" class="card">
+    <div class="pill">Q1 — Poisson‑Binomial (PMF &amp; CDF)</div>
+    <p>Three independent bids: <strong>A</strong>, <strong>B</strong>, <strong>C</strong> with win probabilities P(A)=0.5, P(B)=0.8, P(C)=0.2. Let X be the total wins.</p>
+    <div class="row">
+      <div><label>p(A)</label><input type="number" step="0.01" id="q1_pA" value="0.5"></div>
+      <div><label>p(B)</label><input type="number" step="0.01" id="q1_pB" value="0.8"></div>
+      <div><label>p(C)</label><input type="number" step="0.01" id="q1_pC" value="0.2"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="q1_compute()">Compute &amp; Plot</button>
+      <button class="secondary" onclick="q1_reset()">Reset</button>
+    </div>
+    <div class="svg-wrap"><h3>PMF of X</h3><svg id="q1_pmf" viewBox="0 0 640 300" role="img" aria-label="PMF bar chart"></svg></div>
+    <div class="svg-wrap"><h3>CDF of X</h3><svg id="q1_cdf" viewBox="0 0 640 300" role="img" aria-label="CDF step chart"></svg></div>
+    <div class="hr"></div>
+    <div class="row">
+      <div><label>P(X=0)</label><input id="q1_px0" type="number" step="0.0001"></div>
+      <div><label>P(X=1)</label><input id="q1_px1" type="number" step="0.0001"></div>
+      <div><label>P(X=2)</label><input id="q1_px2" type="number" step="0.0001"></div>
+      <div><label>P(X=3)</label><input id="q1_px3" type="number" step="0.0001"></div>
+    </div>
+    <div class="row">
+      <div><label>P(X ≤ 2)</label><input id="q1_le2" type="number" step="0.0001"></div>
+      <div><label>P(0 &lt; X ≤ 2)</label><input id="q1_between" type="number" step="0.0001"></div>
+    </div>
+    <div class="row wizard-nav">
+      <button class="ghost" onclick="gotoStep(2)">Next →</button>
+      <div style="display:flex; gap:8px">
+        <button onclick="q1_check()">Check answers</button>
+        <button class="ghost" onclick="q1_solution()">Show solution</button>
+      </div>
+    </div>
+    <div id="q1_fb" class="small"></div>
+  </section>
+
+  <!-- Q2 -->
+  <section id="q2" class="card hidden">
+    <div class="pill">Q2 — Continuous RV on [10, 20]</div>
+    <p>PDF: <code>f<sub>R</sub>(r) = c (r − 10) (20 − r)</code> for 10 ≤ r ≤ 20; 0 elsewhere. Derive the CDF and key statistics.</p>
+    <div class="row">
+      <div><label>Your c</label><input id="q2_c" type="number" step="0.0001"></div>
+      <div><label>Your mean E[R]</label><input id="q2_mu" type="number" step="0.0001"></div>
+      <div><label>Your median</label><input id="q2_med" type="number" step="0.0001"></div>
+      <div><label>Your mode</label><input id="q2_mode" type="number" step="0.0001"></div>
+    </div>
+    <div class="row">
+      <div><label>Your standard deviation</label><input id="q2_sd" type="number" step="0.0001"></div>
+      <div><label>Your COV</label><input id="q2_cov" type="number" step="0.0001"></div>
+      <div><label>Your skewness</label><input id="q2_skew" type="number" step="0.0001"></div>
+    </div>
+
+    <!-- Removed the earlier top row with Check + "Show CDF & stats" for consistency -->
+
+    <div class="svg-wrap"><h3>PDF f<sub>R</sub>(r)</h3><svg id="q2_pdf" viewBox="0 0 640 300" role="img" aria-label="PDF curve"></svg></div>
+    <div class="svg-wrap"><h3>CDF F<sub>R</sub>(r)</h3><svg id="q2_cdf" viewBox="0 0 640 300" role="img" aria-label="CDF curve"></svg></div>
+    <div class="row">
+      <div><label>Evaluate F<sub>R</sub>(r) at r (10–20)</label><input id="q2_r" type="number" step="0.1" value="15" oninput="q2_evalCDF()"></div>
+      <div style="display:flex;align-items:flex-end"><div id="q2_r_out" class="small">F_R(15) = 0.5000</div></div>
+    </div>
+
+    <div class="row wizard-nav">
+      <button class="ghost" onclick="gotoStep(1)">← Back</button>
+      <div style="display:flex; gap:8px">
+        <button onclick="q2_check()">Check answers</button>
+        <button class="ghost" onclick="q2_solution()">Show solution</button>
+      </div>
+      <button class="ghost" onclick="gotoStep(3)">Next →</button>
+    </div>
+    <div id="q2_fb" class="small"></div>
+  </section>
+
+  <!-- Q3 -->
+  <section id="q3" class="card hidden">
+    <div class="pill">Q3 — Normal Congestion &amp; Growth</div>
+    <p>Present peak-hour volume: <strong>N(200, 60²)</strong>. Capacity <em>C</em> planes/hr. Mean increases linearly at 10% of current per year; COV remains constant.</p>
+    <div class="row">
+      <div><label>Capacity now, C</label><input id="q3_C" type="number" value="350"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="q3_compute()">Compute &amp; Plot</button>
+      <button class="secondary" onclick="q3_reset()">Reset</button>
+    </div>
+    <div class="svg-wrap"><h3>Today: N(μ=200, σ=60). Shaded P(X &gt; C)</h3><svg id="q3_now" viewBox="0 0 640 300" role="img" aria-label="Normal tail now"></svg></div>
+    <div class="svg-wrap"><h3>In 10 years: N(μ=400, σ=120). Shaded P(X &gt; C)</h3><svg id="q3_future" viewBox="0 0 640 300" role="img" aria-label="Normal tail in 10 years"></svg></div>
+
+    <div class="hr"></div>
+    <div class="row">
+      <div><label>Your P(congestion today)</label><input id="q3_pnow" type="number" step="0.0001"></div>
+      <div><label>Your P(congestion in 10 yrs at same C)</label><input id="q3_p10" type="number" step="0.0001"></div>
+      <div><label>Your required C in 10 yrs for same service</label><input id="q3_reqC" type="number" step="0.1"></div>
+    </div>
+    <div class="row wizard-nav">
+      <button class="ghost" onclick="gotoStep(2)">← Back</button>
+      <div style="display:flex; gap:8px">
+        <button onclick="q3_check()">Check answers</button>
+        <button class="ghost" onclick="q3_solution()">Show solution</button>
+      </div>
+    </div>
+    <div id="q3_fb" class="small"></div>
+  </section>
+
+  <p class="footer">Source problems from the Tutorial 2 PDF.</p>
+</div>
+
+<script>
+/* ---------- Wizard / Score ---------- */
+let CURRENT_STEP = 1;
+let SCORE = 0;
+function computeScore(){SCORE = (sessionStorage.getItem('done_q1')?1:0) + (sessionStorage.getItem('done_q2')?1:0) + (sessionStorage.getItem('done_q3')?1:0);
+  document.getElementById('score').textContent=SCORE;}
+function gotoStep(n){
+  CURRENT_STEP = n;
+  ['q1','q2','q3'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden', (i+1)!==n));
+  document.querySelectorAll('.step').forEach(btn=>btn.classList.toggle('active', +btn.dataset.step===n));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+computeScore();
+
+/* ---------- Helpers ---------- */
+const approx=(a,b,tol=1e-3)=>Math.abs((+a)-(+b))<=tol;
+const fmt=p=>Number(p).toFixed(4);
+
+/* ---------- Drawing helpers ---------- */
+function drawBars(id, xs, ys){
+  const svg=document.getElementById(id); svg.innerHTML='';
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-50,maxY=Math.max(...ys)*1.15;
+  const spacing=plotW/xs.length, bw=spacing*0.6;
+  svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
+                    <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />`;
+  xs.forEach((x,i)=>{const xPos=x0+i*spacing+(spacing-bw)/2; const barH=(ys[i]/maxY)*plotH;
+    svg.innerHTML += `<rect x="${xPos}" y="${y0-barH}" width="${bw}" height="${barH}" fill="#5bc0be" opacity="0.9" />`;
+    svg.innerHTML += `<text x="${x0+i*spacing+spacing/2}" y="${y0+16}" text-anchor="middle" fill="#c0c9e8" font-size="12">${x}</text>`;
+  });
+  for(let i=0;i<=5;i++){const yy=y0-(i/5)*plotH; const val=(maxY*i/5);
+    svg.innerHTML += `<text x="6" y="${yy+4}" fill="#c0c9e8" font-size="12">${val.toFixed(2)}</text>
+                      <line x1="40" x2="${w-10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.05)" />`;
+  }
+}
+function drawStep(id, xs, Fxs){
+  const svg=document.getElementById(id); svg.innerHTML='';
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-50;
+  svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
+                    <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />`;
+  const xMin=xs[0], xMax=xs[xs.length-1];
+  const sx=v=>x0+(v-xMin)/(xMax-xMin)*plotW, sy=v=>y0-(v/1)*plotH;
+  for(let i=0;i<xs.length;i++){const x=xs[i],Fx=Fxs[i];
+    const x1=sx(i?xs[i]-0.5:xMin), x2=sx(i<xs.length-1?xs[i+1]-0.5:xMax+0.5);
+    svg.innerHTML += `<line x1="${x1}" x2="${x2}" y1="${sy(Fx)}" y2="${sy(Fx)}" stroke="#c5d86d" stroke-width="2.5" />`;
+  }
+  for(let i=0;i<=5;i++){const yy=y0-(i/5)*plotH;
+    svg.innerHTML += `<text x="6" y="${yy+4}" fill="#c0c9e8" font-size="12">${(i/5).toFixed(1)}</text>
+                      <line x1="40" x2="${w-10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.05)" />`;
+  }
+}
+function drawCurve(id, xmin, xmax, fn, ymax=null, color='#5bc0be', ylab='y'){
+  const svg=document.getElementById(id); svg.innerHTML='';
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-60;
+  let maxY = ymax==null? 0 : ymax;
+  const N=400;
+  if(ymax==null){for(let i=0;i<=N;i++){const x=xmin+(i/N)*(xmax-xmin); maxY=Math.max(maxY, fn(x));}}
+  const sx=v=>x0+(v-xmin)/(xmax-xmin)*plotW, sy=v=>y0-(v/maxY)*plotH;
+  svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
+                    <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />
+                    <text x="6" y="16" fill="#9fb2e2" font-size="12">${ylab}</text>`;
+  let d='';
+  for(let i=0;i<=N;i++){const x=xmin+(i/N)*(xmax-xmin); d+=(i?'L':'M')+sx(x)+','+sy(fn(x));}
+  svg.innerHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" />`;
+  const steps=5;
+  for(let i=0;i<=steps;i++){const xv=xmin+(i/steps)*(xmax-xmin);
+    svg.innerHTML += `<text x="${sx(xv)}" y="${y0+16}" text-anchor="middle" fill="#c0c9e8" font-size="12">${xv.toFixed(0)}</text>`;}
+  for(let i=0;i<=5;i++){const yy=y0-(i/5)*plotH; const val=(maxY*i/5);
+    svg.innerHTML += `<text x="6" y="${yy+4}" fill="#c0c9e8" font-size="12">${val.toFixed(3)}</text>
+                      <line x1="40" x2="${w-10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.05)" />`;}
+}
+function drawNormalTail(id, mu, sd, C){
+  const svg=document.getElementById(id); svg.innerHTML='';
+  let xmin = mu - 4*sd, xmax = mu + 4*sd;
+  xmin = Math.min(xmin, C - 0.5*sd); xmax = Math.max(xmax, C + 0.5*sd);
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-50;
+  const maxY=(1/(sd*Math.sqrt(2*Math.PI)));
+  const sx=v=>x0+(v-xmin)/(xmax-xmin)*plotW;
+  const sy=v=>y0-(v/maxY)*plotH;
+  // axes
+  svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
+                    <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />
+                    <text x="6" y="16" fill="#9fb2e2" font-size="12">pdf</text>`;
+  // curve + tail
+  const N=360; let d='', tail='';
+  for(let i=0;i<=N;i++){const x=xmin+(i/N)*(xmax-xmin); const y=(1/(sd*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-mu)/sd)**2);
+    d+=(i?'L':'M')+sx(x)+','+sy(y);
+    if(x>=C) tail+=(tail?'L':'M')+sx(x)+','+sy(y);
+  }
+  svg.innerHTML += `<path d="${d}" fill="none" stroke="#5bc0be" stroke-width="2.5" />`;
+  if(tail){tail += `L ${sx(xmax)} ${sy(0)} L ${sx(C)} ${sy(0)} Z`;
+    svg.innerHTML += `<path d="${tail}" fill="rgba(197,216,109,0.35)" stroke="none" />`; }
+  // capacity line
+  svg.innerHTML += `<line x1="${sx(C)}" x2="${sx(C)}" y1="10" y2="${y0}" stroke="#c5d86d" stroke-dasharray="4 4" stroke-width="2"/>`;
+  svg.innerHTML += `<text x="${sx(C)+6}" y="18" fill="#c5d86d" font-size="12">C=${C}</text>`;
+  // ticks
+  const ticks=6;
+  for(let i=0;i<=ticks;i++){const xv=xmin+(i/ticks)*(xmax-xmin);
+    svg.innerHTML += `<text x="${sx(xv)}" y="${y0+16}" text-anchor="middle" fill="#c0c9e8" font-size="12">${xv.toFixed(0)}</text>`;}
+}
+
+/* ---------- Q1 logic ---------- */
+function q1_pmf(ps){let pmf=[1]; for(const p of ps){const next=Array(pmf.length+1).fill(0);
+  for(let k=0;k<pmf.length;k++){next[k]+=pmf[k]*(1-p); next[k+1]+=pmf[k]*p;} pmf=next;} return pmf;}
+const q1_cum=pmf=>{let s=0; return pmf.map(v=>s+=v)};
+
+function q1_compute(){
+  const ps=[+q1_pA.value,+q1_pB.value,+q1_pC.value];
+  const pmf=q1_pmf(ps); const cdf=q1_cum(pmf);
+  drawBars('q1_pmf',[0,1,2,3],pmf); drawStep('q1_cdf',[0,1,2,3],cdf);
+  // placeholders removed to avoid revealing solutions
+  q1_fb.textContent='Computed.';
+}
+function q1_reset(){
+  ['q1_pA','q1_pB','q1_pC','q1_px0','q1_px1','q1_px2','q1_px3','q1_le2','q1_between'].forEach(id=>document.getElementById(id).value='');
+  q1_pA.value=0.5; q1_pB.value=0.8; q1_pC.value=0.2;
+  q1_pmf_el=document.getElementById('q1_pmf'); q1_pmf_el.innerHTML=''; document.getElementById('q1_cdf').innerHTML=''; q1_fb.textContent='';
+}
+function q1_check(){
+  const ps=[+q1_pA.value,+q1_pB.value,+q1_pC.value]; const pmf=q1_pmf(ps); const cdf=q1_cum(pmf);
+  const target=[pmf[0],pmf[1],pmf[2],pmf[3],cdf[2],cdf[2]-pmf[0]];
+  const ans=[q1_px0.value,q1_px1.value,q1_px2.value,q1_px3.value,q1_le2.value,q1_between.value];
+  const ok=ans.every((x,i)=>approx(x,target[i],1e-3));
+  q1_fb.innerHTML= ok?'<span class="ok">✅ Correct.</span>':'<span class="bad">❌ Check your values. Hint: P(X≤2)=1−P(X=3).</span>';
+  if(ok && !sessionStorage.getItem('done_q1')){sessionStorage.setItem('done_q1','1'); computeScore();}
+}
+function q1_solution(){
+  const ps=[+q1_pA.value,+q1_pB.value,+q1_pC.value]; const pmf=q1_pmf(ps); const cdf=q1_cum(pmf);
+  q1_fb.innerHTML = `PMF: [${pmf.map(fmt).join(', ')}]; CDF: [${cdf.map(fmt).join(', ')}]; P(X≤2)=${fmt(cdf[2])}; P(0&lt;X≤2)=${fmt(cdf[2]-pmf[0])}.`;
+}
+
+/* ---------- Q2 logic ---------- */
+const q2_c_true = 3/500;
+function q2_fR(r){return (r>=10 && r<=20)? q2_c_true*(r-10)*(20-r) : 0;}
+function q2_FR(r){
+  if(r<=10) return 0;
+  if(r>=20) return 1;
+  return - (r**3)/500 + (9*r*r)/100 - (6*r)/5 + 5;
+}
+const q2_mu_true=15, q2_med_true=15, q2_mode_true=15, q2_sd_true=Math.sqrt(5), q2_cov_true=Math.sqrt(5)/15;
+function q2_draw(){drawCurve('q2_pdf',10,20,q2_fR,null,'#5bc0be','f_R(r)'); q2_drawCDF();}
+function q2_drawCDF(){
+  const svg=document.getElementById('q2_cdf'); svg.innerHTML='';
+  const w=640,h=300,x0=40,y0=h-30,plotW=w-60,plotH=h-60, xmin=10,xmax=20;
+  const sx=v=>x0+(v-xmin)/(xmax-xmin)*plotW, sy=v=>y0-(v/1)*plotH;
+  svg.innerHTML += `<line x1="40" x2="40" y1="10" y2="${y0}" stroke="#6f7ea3" />
+                    <line x1="40" x2="${w-10}" y1="${y0}" y2="${y0}" stroke="#6f7ea3" />
+                    <text x="6" y="16" fill="#9fb2e2" font-size="12">F_R(r)</text>`;
+  const N=400; let d='';
+  for(let i=0;i<=N;i++){const x=xmin+(i/N)*(xmax-xmin); d+=(i?'L':'M')+sx(x)+','+sy(q2_FR(x));}
+  svg.innerHTML += `<path d="${d}" fill="none" stroke="#c5d86d" stroke-width="2.5" />`;
+  const steps=5;
+  for(let i=0;i<=steps;i++){const xv=xmin+(i/steps)*(xmax-xmin);
+    svg.innerHTML += `<text x="${sx(xv)}" y="${y0+16}" text-anchor="middle" fill="#c0c9e8" font-size="12">${xv.toFixed(0)}</text>`;}
+  for(let i=0;i<=5;i++){const yy=y0-(i/5)*plotH;
+    svg.innerHTML += `<text x="6" y="${yy+4}" fill="#c0c9e8" font-size="12">${(i/5).toFixed(1)}</text>
+                      <line x1="40" x2="${w-10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.05)" />`;}
+}
+function q2_evalCDF(){
+  const r=+document.getElementById('q2_r').value;
+  const v=q2_FR(r);
+  document.getElementById('q2_r_out').textContent=`F_R(${r}) = ${fmt(v)}`;
+}
+function q2_check(){
+  const okC=approx(q2_c.value, q2_c_true, 5e-4);
+  const okMu=approx(q2_mu.value, q2_mu_true, 1e-3);
+  const okMed=approx(q2_med.value, q2_med_true, 1e-3);
+  const okMode=approx(q2_mode.value, q2_mode_true, 1e-3);
+  const okSd=approx(q2_sd.value, q2_sd_true, 5e-3);
+  const okCov=approx(q2_cov.value, q2_cov_true, 5e-4);
+  const okSk=approx(q2_skew.value, 0, 1e-3);
+  const all=[okC,okMu,okMed,okMode,okSd,okCov,okSk].every(Boolean);
+  document.getElementById('q2_fb').innerHTML = all? '<span class="ok">✅ Correct.</span>' :
+    '<span class="bad">❌ Some entries are off. Tip: this is a scaled Beta(2,2).</span>';
+  if(all && !sessionStorage.getItem('done_q2')){sessionStorage.setItem('done_q2','1'); computeScore();}
+}
+function q2_solution(){
+  const s=q2_sd_true, cov=q2_cov_true;
+  document.getElementById('q2_fb').innerHTML = `c = 3/500 = 0.006. CDF (10≤r≤20): F_R(r) = -r³/500 + 9r²/100 − 6r/5 + 5. Mean=15, Median=15, Mode=15, σ=√5≈${s.toFixed(4)}, COV≈${cov.toFixed(4)}, skewness=0.`;
+}
+
+/* ---------- Q3 logic ---------- */
+function Phi(z){const s=z<0?-1:1; z=Math.abs(z)/Math.SQRT2;
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const t=1/(1+p*z); const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-z*z);
+  return 0.5*(1+s*y);}
+function q3_params(){const mu0=200, sd0=60; const mu10=200+10*0.1*200; const cov=sd0/mu0; const sd10=cov*mu10; return {mu0,sd0,mu10,sd10};}
+function q3_compute(){
+  const {mu0,sd0,mu10,sd10}=q3_params(); const C=+q3_C.value;
+  const zNow=(C-mu0)/sd0, z10=(C-mu10)/sd10;
+  const pNow=1-Phi(zNow), p10=1-Phi(z10);
+  drawNormalTail('q3_now', mu0, sd0, C); drawNormalTail('q3_future', mu10, sd10, C);
+  document.getElementById('q3_fb').innerHTML = `P(congestion today)=${fmt(pNow)}; in 10 years at same C=${fmt(p10)}.`;
+}
+function q3_reset(){q3_C.value=350; q3_now.innerHTML=''; q3_future.innerHTML=''; q3_pnow.value=''; q3_p10.value=''; q3_reqC.value=''; q3_fb.textContent='';}
+function q3_check(){
+  const {mu0,sd0,mu10,sd10}=q3_params(); const C=+q3_C.value;
+  const pNow=1-Phi((C-mu0)/sd0), p10=1-Phi((C-mu10)/sd10);
+  const reqC = mu10 + sd10 * ((C-mu0)/sd0);
+  const ok1=approx(q3_pnow.value, pNow, 3e-3);
+  const ok2=approx(q3_p10.value,  p10,  5e-3);
+  const ok3=Math.abs((+q3_reqC.value)-reqC)<=0.5;
+  document.getElementById('q3_fb').innerHTML = (ok1&&ok2&&ok3)?'<span class="ok">✅ Correct.</span>':'<span class="bad">❌ Not quite. Hint: keep the same z-quantile.</span>';
+  if((ok1&&ok2&&ok3) && !sessionStorage.getItem('done_q3')){sessionStorage.setItem('done_q3','1'); computeScore();}
+}
+function q3_solution(){
+  const {mu0,sd0,mu10,sd10}=q3_params(); const C=+q3_C.value;
+  const zNow=(C-mu0)/sd0; const pNow=1-Phi(zNow); const p10=1-Phi((C-mu10)/sd10);
+  const reqC = mu10 + sd10*zNow;
+  document.getElementById('q3_fb').innerHTML = `Today: z=(C−200)/60; with C=${C}, z=${zNow.toFixed(4)} ⇒ P≈${fmt(pNow)}. In 10 yrs: μ=400, σ=120 ⇒ P≈${fmt(p10)}. To keep the same service: C=400+120·z ≈ ${reqC.toFixed(1)}.`;
+}
+
+/* ---------- Boot ---------- */
+gotoStep(1);
+q1_compute();
+q2_draw(); q2_evalCDF();
+q3_compute();
+</script>
+</body>
+</html>
