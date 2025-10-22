@@ -583,7 +583,8 @@ q7_compute();
     display:flex; justify-content:space-between; align-items:center}
   .coach-body{padding:10px; overflow:auto; gap:8px; display:flex; flex-direction:column}
   .coach-msg{background:#0f1833; border:1px solid rgba(255,255,255,.12); color:#e7efff;
-    padding:8px 10px; border-radius:10px; font-size:13px}
+    padding:8px 10px; border-radius:10px; font-size:13px;
+    white-space: pre-wrap; /* NEW: preserve \n for MathJax-friendly layout */}
   .coach-self{align-self:flex-end; background:#0f1e3f}
   .coach-input{display:flex; gap:8px; padding:10px; border-top:1px solid rgba(255,255,255,.12); background:#0e162f}
   .coach-input input{flex:1; background:#0b132b; color:#e5e7eb; border:1px solid rgba(255,255,255,.18);
@@ -871,9 +872,41 @@ q7_compute();
 })();
 </script>
 <!-- === /AI-COACH === -->
+  
+<!-- MathJax v3 (TeX → CHTML) -->
+<script>
+  // Configure before loading the script
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      packages: {'[+]': ['noerrors', 'noundefined']}
+    },
+    options: {
+      // Don't typeset inside these tags
+      skipHtmlTags: ['script','noscript','style','textarea','pre','code']
+    },
+    // We'll queue messages that arrive before MathJax is ready
+    startup: {
+      typeset: false,
+      ready: () => {
+        MathJax.startup.defaultReady();
+        window.__mathjax_ready = true;
+        const pend = window.__mathjax_pending || [];
+        if (pend.length) {
+          MathJax.typesetPromise(pend).catch(() => {});
+          window.__mathjax_pending = [];
+        }
+      }
+    }
+  };
+</script>
+<script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 </body>
 </html>
+
 
 
 
