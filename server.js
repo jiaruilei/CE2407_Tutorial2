@@ -2,59 +2,77 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
-// --- Optional fetch polyfill for Node < 18 (Render should use >=18, but this is safer)
-if (typeof fetch === "undefined") {
-  global.fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
-}
-
 dotenv.config();
+
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
-// --- CORS: use origins (no paths). Add your GitHub Pages origin(s) here.
-app.use(cors({
-  origin: [
-    "https://jiaruilei.github.io",          // whole user site
-    // "https://jiaruilei.github.io/jet-flow" // not needed; paths aren't origins
-  ],
-}));
+// --- CORS: allow GitHub Pages, common locals, and no-origin tools (curl/Postman)
+const ALLOWED = new Set([
+  "https://jiaruilei.github.io",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5500"
+]);
+app.use(
+  cors({
+    origin(origin, cb) {
+      if (!origin || ALLOWED.has(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS"));
+    }
+  })
+);
 
-// --- Health check (make sure Render's Health Check Path is set to this)
-app.get("/api/health", (req, res) => res.json({ ok: true }));
+// --- Health checks (Render can use this path)
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.get("/", (_req, res) => res.send("CE2407A AI-Coach proxy is running."));
 
 // --- ChatGPT proxy
 app.post("/api/chat", async (req, res) => {
   try {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    if (!OPENAI_API_KEY) return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-
-    const { model = "gpt-4o-mini", temperature = 0.2, system = "", messages = [] } = req.body || {};
-
-    const chatMessages = [];
-    if (system) chatMessages.push({ role: "system", content: system });
-    for (const m of messages) {
-      if (m?.role && m?.content) chatMessages.push({ role: m.role, content: m.content });
+    const OPENAI_API_BASE = process.env.OPENAI_API_BASE || "https://api.openai.com/v1";
+    if (!OPENAI_API_KEY) {
+      return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
     }
 
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    let { model = "gpt-4o-mini", temperature = 0.2, system = "", messages = [] } = req.body || {};
+    // Harden inputs
+    if (!Array.isArray(messages)) messages = [];
+
+    const clean = messages
+      .filter(m => m && typeof m.role === "string" && typeof m.content === "string")
+      .map(m => ({ role: m.role, content: String(m.content) }));
+
+    // Only prepend a system message if one isn't already present
+    if (system && !clean.some(m => m.role === "system")) {
+      clean.unshift({ role: "system", content: String(system) });
+    }
+
+    const r = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ model, temperature, messages: chatMessages })
+      body: JSON.stringify({
+        model,
+        temperature: isNaN(Number(temperature)) ? 0.2 : Number(temperature),
+        messages: clean
+      })
     });
 
+    const text = await r.text();
     if (!r.ok) {
-      const txt = await r.text();
-      return res.status(r.status).json({ error: txt });
+      return res.status(r.status).json({ error: text });
     }
 
-    const data = await r.json();
-    res.json({ reply: data?.choices?.[0]?.message?.content ?? "" });
+    const data = JSON.parse(text);
+    const reply = data?.choices?.[0]?.message?.content ?? "";
+    return res.json({ reply });
   } catch (err) {
     console.error("Proxy error:", err);
-    res.status(500).json({ error: "Proxy error" });
+    return res.status(500).json({ error: "Proxy error" });
   }
 });
 
@@ -64,4 +82,3 @@ app.listen(port, () => {
   console.log(`AI coach proxy listening on :${port}`);
   console.log(`Health check at: http://localhost:${port}/api/health`);
 });
-
