@@ -563,5 +563,314 @@ q3_compute();
 q6_compute();
 q7_compute();
 </script>
+
+<!-- === AI-COACH (CE2407A — General) === -->
+<style>
+  /* Keep visual language consistent with CE2407A page */
+  .coach-fab{
+    position:fixed; right:22px; bottom:22px; width:56px; height:56px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#04131c; display:flex; align-items:center; justify-content:center;
+    font-weight:900; box-shadow:0 10px 30px rgba(0,0,0,.45); cursor:pointer; z-index:9999;
+    border:1px solid rgba(255,255,255,.22);
+  }
+  .coach-panel{
+    position:fixed; right:22px; bottom:86px; width:360px; max-height:66vh; display:none;
+    background:var(--card); border:1px solid rgba(255,255,255,.12); border-radius:16px;
+    box-shadow:0 14px 40px rgba(0,0,0,.5); z-index:9999; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .coach-header{padding:10px 12px; background:#12204b; color:#e6edff; font-weight:700; font-size:14px;
+    display:flex; justify-content:space-between; align-items:center}
+  .coach-body{padding:10px; overflow:auto; gap:8px; display:flex; flex-direction:column}
+  .coach-msg{background:#0f1833; border:1px solid rgba(255,255,255,.12); color:#e7efff;
+    padding:8px 10px; border-radius:10px; font-size:13px}
+  .coach-self{align-self:flex-end; background:#0f1e3f}
+  .coach-input{display:flex; gap:8px; padding:10px; border-top:1px solid rgba(255,255,255,.12); background:#0e162f}
+  .coach-input input{flex:1; background:#0b132b; color:#e5e7eb; border:1px solid rgba(255,255,255,.18);
+    border-radius:10px; padding:8px 10px; font-size:13px}
+  .coach-input button{background:var(--accent); border:none; border-radius:10px; padding:8px 10px; color:#04131c; font-weight:800; cursor:pointer}
+  .coach-quick{display:flex; gap:6px; flex-wrap:wrap; padding:8px 10px; border-top:1px dashed rgba(255,255,255,.16)}
+  .quick{background:#0b1a36; border:1px solid rgba(255,255,255,.16); color:#cfe9ff; font-size:12px; padding:4px 6px; border-radius:8px; cursor:pointer}
+  .coach-config{padding:8px 10px; border-top:1px solid rgba(255,255,255,.12); display:grid; gap:8px}
+  .coach-config input{background:#0b132b;color:#e5e7eb;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 8px;font-size:12px}
+  .coach-config .tiny{font-size:11px;color:#a8b3c7}
+  .coach-btn{background:#233058;color:#dee6ff;border:1px solid rgba(255,255,255,.18);padding:4px 8px;border-radius:8px;cursor:pointer}
+</style>
+
+<!-- FAB + PANEL -->
+<div class="coach-fab" id="aiCoachFab" title="AI Coach">🤖</div>
+<div class="coach-panel" id="aiCoachPanel" aria-live="polite" aria-label="AI Coach panel">
+  <div class="coach-header">
+    <span>AI‑Coach (CE2407A)</span>
+    <button id="aiCoachClose" class="coach-btn">Close</button>
+  </div>
+
+  <!-- Optional ChatGPT proxy (off by default) -->
+  <div class="coach-config">
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:#cfe9ff; font-size:13px">
+      <input id="aiUseChatGPT" type="checkbox"> Use ChatGPT for replies (via proxy)
+    </label>
+    <div id="aiChatCfg" style="display:none; gap:8px">
+      <div>
+        <div class="tiny">Proxy endpoint (recommended):</div>
+        <input id="aiChatEndpoint" placeholder="/api/chat" value="/api/chat">
+      </div>
+      <div style="display:grid; gap:6px; grid-template-columns:1fr 1fr;">
+        <div>
+          <div class="tiny">Model</div>
+          <input id="aiChatModel" value="gpt-4o-mini">
+        </div>
+        <div>
+          <div class="tiny">Temperature</div>
+          <input id="aiChatTemp" type="number" step="0.1" min="0" max="2" value="0.2">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="coach-body" id="aiCoachBody">
+    <div class="coach-msg">Hi! I can give hints, explain approaches, or answer questions about the current problem. Try a quick button or type your own question.</div>
+  </div>
+
+  <div class="coach-quick">
+    <button class="quick" data-q="Give me a hint.">Hint</button>
+    <button class="quick" data-q="Explain the approach.">Approach</button>
+    <button class="quick" data-q="Open the page’s Show solution button.">Show solution on page</button>
+    <button class="quick" data-q="Define the key terms.">Definitions</button>
+    <button class="quick" data-q="Check my steps.">Check my steps</button>
+  </div>
+
+  <div class="coach-input">
+    <input id="aiCoachInput" placeholder="Ask about the current question… (e.g., 'How do I find the CDF?')" />
+    <button id="aiCoachSend">Send</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ---------- Safe helpers ---------- */
+  const $ = (id)=>document.getElementById(id);
+  const escapeHTML = (s)=> String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const asHTML = (s)=> escapeHTML(s).replace(/\n/g,'<br>');
+  const store = {
+    get(k, d=null){ try{ const v = localStorage.getItem(k); return v===null? d : JSON.parse(v);}catch{ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+  };
+
+  /* ---------- Elements ---------- */
+  const fab=$('aiCoachFab'), panel=$('aiCoachPanel'), closeBtn=$('aiCoachClose');
+  const body=$('aiCoachBody'), input=$('aiCoachInput'), send=$('aiCoachSend');
+  const useBox=$('aiUseChatGPT'), cfgWrap=$('aiChatCfg'), ep=$('aiChatEndpoint'), model=$('aiChatModel'), temp=$('aiChatTemp');
+
+  /* ---------- Load saved config ---------- */
+  useBox.checked = !!store.get('aiCoach_use', false);
+  cfgWrap.style.display = useBox.checked ? 'grid' : 'none';
+  ep.value    = store.get('aiCoach_ep', '/api/chat') || '/api/chat';
+  model.value = store.get('aiCoach_model', 'gpt-4o-mini') || 'gpt-4o-mini';
+  temp.value  = store.get('aiCoach_temp', 0.2);
+
+  /* ---------- UI wiring ---------- */
+  fab.addEventListener('click', ()=>{ panel.style.display = (panel.style.display==='flex' ? 'none' : 'flex'); panel.style.flexDirection='column'; setTimeout(()=>body.scrollTop=body.scrollHeight,10); });
+  closeBtn.addEventListener('click', ()=> panel.style.display='none');
+  document.querySelectorAll('.coach-quick').forEach(qg=>{
+    qg.addEventListener('click', (e)=>{
+      const b=e.target.closest('.quick'); if(!b) return;
+      coachAsk(b.dataset.q);
+    });
+  });
+  send.addEventListener('click', ()=>coachAsk(input.value));
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ coachAsk(input.value); } });
+  useBox.addEventListener('change', ()=>{
+    cfgWrap.style.display = useBox.checked ? 'grid' : 'none';
+    store.set('aiCoach_use', useBox.checked);
+  });
+  ep.addEventListener('change', ()=>store.set('aiCoach_ep', ep.value.trim()));
+  model.addEventListener('change', ()=>store.set('aiCoach_model', model.value.trim()));
+  temp.addEventListener('change', ()=>store.set('aiCoach_temp', parseFloat(temp.value)||0.2));
+
+  /* ---------- Core ---------- */
+  function appendMsg(msg, self=false){
+    const div = document.createElement('div');
+    div.className = 'coach-msg' + (self ? ' coach-self' : '');
+    div.innerHTML = asHTML(msg);
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function activeSection(){
+    // Most robust: whichever <section> isn't hidden
+    const sec = document.querySelector('section.card:not(.hidden)') || document.querySelector('section.card');
+    if(!sec) return null;
+    const title = (sec.querySelector('.pill')?.textContent || '').trim();
+    const desc  = (sec.querySelector('p')?.textContent || '').trim();
+    // collect filled inputs inside this section
+    const inputs = Array.from(sec.querySelectorAll('input')).map(i=>({id:i.id||'(no id)', val:i.value}));
+    return { id: sec.id, title, desc, inputs, sectionEl: sec };
+  }
+
+  function clickShowSolutionInPage(){
+    const sec = activeSection()?.sectionEl;
+    if(!sec) return false;
+    // Prefer a button that contains "Show solution"
+    const btn = Array.from(sec.querySelectorAll('button')).find(b=>/show solution/i.test(b.textContent||''));
+    if(btn){ btn.click(); return true; }
+    return false;
+  }
+
+  async function coachAsk(text){
+    if(!text) return;
+    appendMsg(text, true); input.value='';
+
+    // Special quick: open page solution
+    if(/show solution on page/i.test(text) || /open the page’s show solution/i.test(text)){
+      const ok = clickShowSolutionInPage();
+      appendMsg(ok ? 'Opened the page’s “Show solution”.' : 'Couldn’t find a “Show solution” button on this section.');
+      return;
+    }
+
+    const ctx = buildContext(text);
+
+    try{
+      if(useBox.checked){
+        const reply = await askChatGPT(ctx);
+        appendMsg(reply || 'No content received from ChatGPT.');
+      }else{
+        appendMsg(localCoach(ctx));
+      }
+    }catch(err){
+      console.error(err);
+      appendMsg('I ran into an error. If ChatGPT mode is on, please check the proxy endpoint/model. Falling back to local hints…');
+      appendMsg(localCoach(ctx));
+    }
+  }
+
+  function buildContext(userText){
+    const sec = activeSection();
+    const step = (window.CURRENT_STEP!=null ? window.CURRENT_STEP : null);
+    const filled = (sec?.inputs||[]).filter(x=>String(x.val).length>0);
+    const filledPreview = filled.slice(0,12).map(x=>`${x.id}: ${x.val}`).join(', ');
+    return {
+      userText,
+      step,
+      sectionId: sec?.id||'',
+      title: sec?.title||'',
+      description: sec?.desc||'',
+      inputsPreview: filledPreview
+    };
+  }
+
+  function localCoach(ctx){
+    // General, non-scene-specific hints (Q-agnostic)
+    const lower = (ctx.userText||'').toLowerCase();
+    const t = (ctx.title||'').toLowerCase();
+    const d = (ctx.description||'').toLowerCase();
+
+    // Universal replies
+    if(lower.includes('hint')) return genericHint(t,d);
+    if(lower.includes('approach')||lower.includes('how')||lower.includes('start')) return genericApproach(t,d);
+    if(lower.includes('definition')||lower.includes('define')||lower.includes('terms')) return genericDefinitions(t,d);
+    if(lower.includes('check')) return 'Share your steps or numbers and I’ll point out what to verify (e.g., normalization, independence, or sign conventions).';
+
+    // Default
+    return genericHint(t,d);
+  }
+
+  function genericHint(t,d){
+    // Lightly branch on topic keywords found in the visible card
+    if(/poisson.*binomial|pmf|cdf/i.test(t+d)){
+      return [
+        'Think in terms of independent Bernoulli trials with different p’s.',
+        'Use convolution (or a small DP) to get the PMF for X=0,1,2,3.',
+        'CDF is the running sum of the PMF. Check that probabilities sum to 1.'
+      ].join('\n');
+    }
+    if(/continuous.*/i.test(t+d)){
+      return [
+        'First, find the constant c by integrating the PDF over [10,20] and setting it to 1.',
+        'Then integrate the PDF to get the CDF. Symmetry can reveal mean/median/mode.',
+        'For spread, compute Var via E[R²]−(E[R])²; σ=√Var; COV=σ/μ.'
+      ].join('\n');
+    }
+    if(/normal|congestion|capacity/i.test(t+d)){
+      return [
+        'Translate the capacity into a z‑score: z=(C−μ)/σ.',
+        'Congestion probability is the right tail 1−Φ(z).',
+        'If μ scales and COV stays constant, σ scales with μ; keep the same z for equal service.'
+      ].join('\n');
+    }
+    if(/liquefaction|intensity|weights/i.test(t+d)){
+      return [
+        'Normalize the intensity weights to obtain P(L), P(M), P(H).',
+        'Use total probability: P(liq)=Σ P(I)·P(liq|I).',
+        'For multiple events with independence, use powers; for P(L|liq), apply Bayes.'
+      ].join('\n');
+    }
+    if(/two.*device|detection|accurate/i.test(t+d)){
+      return [
+        'Assume independence unless told otherwise.',
+        'P(detected by ≥1)=1−(1−pA)(1−pB). P(only one)=pA(1−pB)+pB(1−pA).',
+        'Accurate location: sum contributions of each detection case times its accuracy.'
+      ].join('\n');
+    }
+    return [
+      'Read the variables and what is asked (probability vs. expectation vs. tail).',
+      'Identify any independence assumptions and what must be normalized.',
+      'Write down the governing formula, then plug in your values step‑by‑step.'
+    ].join('\n');
+  }
+
+  function genericApproach(t,d){
+    return [
+      '1) Restate the problem in your own words and list given values.',
+      '2) Identify the governing relationship (e.g., normalization for PDFs, convolution for sums, Φ for Normal tails, total probability/Bayes for mixtures).',
+      '3) Compute intermediate pieces (constants, PMF entries, integrals, z‑scores).',
+      '4) Assemble the final quantity and sanity‑check (units, bounds, sums to 1).'
+    ].join('\n');
+  }
+
+  function genericDefinitions(t,d){
+    return [
+      'PMF: P(X=k) for discrete X; sums to 1.',
+      'CDF: F(x)=P(X≤x); non‑decreasing; for discrete, it steps.',
+      'PDF: f(x) integrates to 1; CDF is its integral.',
+      'Φ(z): standard Normal CDF; z‑score = (x−μ)/σ.',
+      'Law of total probability: P(A)=Σ P(A|B_i)P(B_i); Bayes updates P(B_i|A).'
+    ].join('\n');
+  }
+
+  async function askChatGPT(ctx){
+    const system = [
+      'You are a concise, encouraging AI coach for CE2407A tutorials.',
+      'Give step‑by‑step guidance and hints first; show full derivations only when asked.',
+      'Respect the problem’s notation; keep equations compact; check for normalization and independence.'
+    ].join(' ');
+    const content = [
+      `Current section: ${ctx.sectionId} | Title: ${ctx.title}`,
+      `Description: ${ctx.description}`,
+      ctx.inputsPreview ? `Student inputs: ${ctx.inputsPreview}` : 'Student inputs: (none filled)',
+      `Student question: ${ctx.userText}`
+    ].join('\n');
+
+    const r = await fetch((ep.value||'/api/chat').trim(), {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: (model.value||'gpt-4o-mini'),
+        temperature: parseFloat(temp.value||'0.2'),
+        system,
+        messages: [
+          { role:'system', content: system },
+          { role:'user',   content: content }
+        ]
+      })
+    });
+    if(!r.ok) throw new Error('Proxy error '+r.status);
+    const data = await r.json();
+    return data.reply || '';
+  }
+})();
+</script>
+<!-- === /AI-COACH === -->
+
 </body>
 </html>
