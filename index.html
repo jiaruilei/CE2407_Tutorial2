@@ -563,6 +563,77 @@ q3_compute();
 q6_compute();
 q7_compute();
 </script>
+  
+<script>
+/* === Minimal analytics emitter (CE2407A) === */
+(function(){
+  function sid(){
+    let s = localStorage.getItem('ce2407_sid');
+    if(!s){ s = 's_'+Math.random().toString(36).slice(2)+Date.now().toString(36);
+      localStorage.setItem('ce2407_sid', s); }
+    return s;
+  }
+  function analyticsEndpoint(){
+    try{
+      // Reuse the AI‑Coach endpoint if user changed it in the UI
+      const saved = JSON.parse(localStorage.getItem('aiCoach_ep') || '"/api/chat"');
+      const base = (typeof saved === 'string' ? saved : '/api/chat');
+      if (/^https?:\/\//.test(base)) return base.replace(/\/api\/chat$/, '/api/track');
+      return '/api/track';
+    }catch{ return '/api/track'; }
+  }
+  window.track = function(event, payload={}){
+    const active = document.querySelector('section.card:not(.hidden)');
+    const sectionId = active ? active.id : null;
+    fetch(analyticsEndpoint(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-Id': sid()
+      },
+      body: JSON.stringify({
+        event,
+        page: location.pathname + location.hash,
+        step: (typeof window.CURRENT_STEP==='number' ? window.CURRENT_STEP : null),
+        sectionId,
+        sessionId: sid(),
+        payload
+      })
+    }).catch(()=>{});
+  };
+
+  // Page/session signals
+  document.addEventListener('visibilitychange', () =>
+    track(document.visibilityState === 'hidden' ? 'page_hide' : 'page_show')
+  );
+  track('page_load', { title: document.title });
+
+  // Wrap key functions you already have (compute/check/solution/step)
+  const wrap = (name) => {
+    if (typeof window[name] === 'function') {
+      const orig = window[name];
+      window[name] = function(...args){
+        try { track('ui_' + name); } catch {}
+        return orig.apply(this, args);
+      };
+    }
+  };
+  ['gotoStep','q1_compute','q1_check','q1_solution','q2_draw','q2_check','q2_solution',
+   'q3_compute','q3_check','q3_solution','q6_compute','q6_check','q6_solution',
+   'q7_compute','q7_check','q7_solution'].forEach(wrap);
+
+  // AI‑Coach UI hooks (fab/close/quick buttons)
+  document.addEventListener('click', (e)=>{
+    if(e.target?.id === 'aiCoachFab') track('coach_toggle');
+    if(e.target?.id === 'aiCoachClose') track('coach_close');
+    const quick = e.target?.closest('.quick');
+    if(quick) track('coach_quick', { label: quick.dataset.q });
+  });
+
+  // If you want to log each chat send (length only), add 1 line inside your coachAsk():
+  // track('coach_send', { len: text?.length || 0, usingChatGPT: useBox.checked });
+})();
+</script>
 
 <!-- === AI-COACH (CE2407A — General) === -->
 <style>
@@ -915,6 +986,7 @@ q7_compute();
 
 </body>
 </html>
+
 
 
 
