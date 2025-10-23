@@ -576,8 +576,8 @@ q7_compute();
   function analyticsEndpoint(){
     try{
       // Reuse the AI‑Coach endpoint if user changed it in the UI
-      const saved = JSON.parse(localStorage.getItem('aiCoach_ep') || '"/api/chat"');
-      const base = (typeof saved === 'string' ? saved : '/api/chat');
+      const saved = JSON.parse(localStorage.getItem('aiCoach_ep') || '"http://ce2407-tutorial2-onrender.com/api/chat"');
+      const base = (typeof saved === 'string' ? saved : 'http://ce2407-tutorial2-onrender.com/api/chat');
       if (/^https?:\/\//.test(base)) return base.replace(/\/api\/chat$/, '/api/track');
       return '/api/track';
     }catch{ return '/api/track'; }
@@ -986,6 +986,7 @@ q7_compute();
 
 </body>
 </html>
+
 
 
 
