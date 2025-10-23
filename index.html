@@ -576,8 +576,8 @@ q7_compute();
   function analyticsEndpoint(){
     try{
       // Reuse the AI‑Coach endpoint if user changed it in the UI
-      const saved = JSON.parse(localStorage.getItem('aiCoach_ep') || '"http://ce2407-tutorial2-onrender.com/api/chat"');
-      const base = (typeof saved === 'string' ? saved : 'http://ce2407-tutorial2-onrender.com/api/chat');
+      const saved = JSON.parse(localStorage.getItem('aiCoach_ep') || '"https://ce2407-tutorial2.onrender.com/api/chat"');
+      const base = (typeof saved === 'string' ? saved : 'https://ce2407-tutorial2.onrender.com/api/chat');
       if (/^https?:\/\//.test(base)) return base.replace(/\/api\/chat$/, '/api/track');
       return '/api/track';
     }catch{ return '/api/track'; }
@@ -737,7 +737,7 @@ q7_compute();
   /* ---------- Load saved config ---------- */
   useBox.checked = !!store.get('aiCoach_use', false);
   cfgWrap.style.display = useBox.checked ? 'grid' : 'none';
-  ep.value    = store.get('aiCoach_ep', 'http://ce2407-tutorial2-onrender.com/api/chat') || 'http://ce2407-tutorial2-onrender.com/api/chat';
+  ep.value    = store.get('aiCoach_ep', 'https://ce2407-tutorial2.onrender.com/api/chat') || 'https://ce2407-tutorial2.onrender.com/api/chat';
   model.value = store.get('aiCoach_model', 'gpt-4o-mini') || 'gpt-4o-mini';
   temp.value  = store.get('aiCoach_temp', 0.2);
 
@@ -932,7 +932,7 @@ q7_compute();
       `Student question: ${ctx.userText}`
     ].join('\n');
 
-    const r = await fetch((ep.value||'http://ce2407-tutorial2-onrender.com/api/chat').trim(), {
+    const r = await fetch((ep.value||'https://ce2407-tutorial2.onrender.com/api/chat').trim(), {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -986,6 +986,7 @@ q7_compute();
 
 </body>
 </html>
+
 
 
 
